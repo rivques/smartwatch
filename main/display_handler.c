@@ -13,7 +13,6 @@
 #include "esp_lvgl_port.h"
 #include "font/lv_font.h"
 #include "lcd_7x5.h"
-#include "pixeboy_16.h"
 #include "pixeboy_20.h"
 #include "pixeboy_32.h"
 #include "pixeboy_60.c"
@@ -183,41 +182,37 @@ static void app_main_display(void)
 
 }
 
-void draw_status_bar(bool is_wifi, bool is_bt, const char* time_string, int8_t batt_pct){
-    lv_obj_t *scr = lv_scr_act();
+static lv_obj_t *bottom_line, *label, *bat_icon, *bat_fill, *bat_label;
+static lv_obj_t *sec_box, *hours_label, *minutes_label, *ampm_label, *mid_line;
+static lv_obj_t *dow_label, *month_label, *day_label, *year_label;
+
+void init_status_bar(lv_obj_t *scr) {
     lv_obj_set_style_bg_color(scr, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
 
-    /* bottom line */
-    lv_obj_t *bottom_line = lv_obj_create(scr);
+    bottom_line = lv_obj_create(scr);
     lv_obj_set_size(bottom_line, DISPLAY_WIDTH, 1);
     lv_obj_set_style_bg_color(bottom_line, lv_color_hex(0xffffff), 0); 
-    lv_obj_set_style_bg_opa(bottom_line, LV_OPA_COVER, 0);              // Ensure full opacity
     lv_obj_align(bottom_line, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_bg_opa(bottom_line, LV_OPA_COVER, 0);              // Ensure full opacity
     lv_obj_set_style_radius(bottom_line, 0, 0); // No rounding
     lv_obj_set_style_shadow_opa(bottom_line, LV_OPA_TRANSP, 0); // No shadow
     lv_obj_set_style_border_opa(bottom_line, LV_OPA_TRANSP, 0); // No border
     lv_obj_set_style_outline_opa(bottom_line, LV_OPA_TRANSP, 0); // No outline
-
-    /* Time label */
-    lv_obj_t *label = lv_label_create(scr);
+    
+    label = lv_label_create(scr);
     lv_obj_set_width(label, DISPLAY_WIDTH);
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(label, time_string);
-    lv_obj_set_style_text_font(label, &lcd_7x5, 0);  // Use readable font
-    lv_obj_set_style_text_color(label, lv_color_white(), 0);        // High contrast text
-    lv_obj_set_style_bg_color(label, lv_color_black(), 0);          // Dark background for contrast
-    lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);              // Ensure full opacity
+    lv_obj_set_style_text_font(label, &lcd_7x5, 0);
+    lv_obj_set_style_text_color(label, lv_color_white(), 0);
     lv_obj_align(label, LV_ALIGN_TOP_MID, -4, 1);
-
-    /* Battery icon */
-    lv_obj_t *bat_icon = lv_img_create(scr);
+    
+    bat_icon = lv_img_create(scr);
     lv_img_set_src(bat_icon, &bat);
     lv_obj_set_pos(bat_icon, DISPLAY_WIDTH - 17, 1);
-    /* battery fill*/
-    lv_obj_t *bat_fill = lv_obj_create(scr);
-    lv_obj_set_size(bat_fill, batt_pct*15/100, 7);
-    ESP_LOGI(TAG, "Calculated battery pixel width: %d", batt_pct*15/100);
+    
+    bat_fill = lv_obj_create(scr);
+    lv_obj_set_size(bat_fill, 15, 7);
     lv_obj_set_style_bg_color(bat_fill, lv_color_hex(0x0000ff), 0); // Green color
     lv_obj_set_style_bg_opa(bat_fill, LV_OPA_COVER, 0);              // Ensure full opacity
     lv_obj_align(bat_fill, LV_ALIGN_TOP_LEFT, 112, 2);
@@ -225,31 +220,27 @@ void draw_status_bar(bool is_wifi, bool is_bt, const char* time_string, int8_t b
     lv_obj_set_style_shadow_opa(bat_fill, LV_OPA_TRANSP, 0); // No shadow
     lv_obj_set_style_border_opa(bat_fill, LV_OPA_TRANSP, 0); // No border
     lv_obj_set_style_outline_opa(bat_fill, LV_OPA_TRANSP, 0); // No outline
-
-    /* Battery percentage */
-    lv_obj_t *bat_label = lv_label_create(scr);
+    
+    bat_label = lv_label_create(scr);
     lv_obj_set_width(bat_label, 50);
     lv_obj_set_style_text_align(bat_label, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_obj_set_style_text_font(bat_label, &lcd_7x5, 0);
+    lv_obj_set_style_text_color(bat_label, lv_color_white(), 0);
+    lv_obj_align(bat_label, LV_ALIGN_TOP_RIGHT, -17, 1);
+}
+
+void update_status_bar(const char* time_string, int8_t batt_pct) {
+    lv_label_set_text(label, time_string);
+    lv_obj_set_size(bat_fill, batt_pct * 15 / 100, 7);
+    ESP_LOGI(TAG, "Calculated battery pixel width: %d", batt_pct*15/100);
     char bat_str[10];
     snprintf(bat_str, sizeof(bat_str), "%d%%", batt_pct);
     lv_label_set_text(bat_label, bat_str);
-    lv_obj_set_style_text_font(bat_label, &lcd_7x5, 0);  // Use readable font
-    lv_obj_set_style_text_color(bat_label, lv_color_white(), 0);        // High contrast text
-    lv_obj_set_style_bg_color(bat_label, lv_color_black(), 0);          // Dark background for contrast
-    lv_obj_set_style_text_opa(bat_label, LV_OPA_COVER, 0);              // Ensure full opacity
-    lv_obj_align(bat_label, LV_ALIGN_TOP_RIGHT, -17, 1);
-
-
 }
 
-void draw_time(uint8_t hours, uint8_t minutes, uint8_t seconds){
-    lv_obj_t *scr = lv_scr_act();
-
-    /* seconds box */
-    uint8_t sec_box_h = seconds * 117 / 60;
-    ESP_LOGI(TAG, "Seconds box height: %d", sec_box_h);
-    lv_obj_t *sec_box = lv_obj_create(scr);
-    lv_obj_set_size(sec_box, 63, sec_box_h);
+void init_time_display(lv_obj_t *scr) {
+    sec_box = lv_obj_create(scr);
+    lv_obj_set_size(sec_box, 63, 117);
     lv_obj_set_style_bg_color(sec_box, lv_color_hex(0x111122), 0); // Green color
     lv_obj_set_style_bg_opa(sec_box, LV_OPA_COVER, 0);              // Ensure full opacity
     lv_obj_align(sec_box, LV_ALIGN_BOTTOM_LEFT, 1, 0);
@@ -257,49 +248,23 @@ void draw_time(uint8_t hours, uint8_t minutes, uint8_t seconds){
     lv_obj_set_style_shadow_opa(sec_box, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(sec_box, LV_OPA_TRANSP, 0);
     lv_obj_set_style_outline_opa(sec_box, LV_OPA_TRANSP, 0);
-
     
-    /* Hours label */
-    lv_obj_t *hours_label = lv_label_create(scr);
-    lv_obj_set_width(hours_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(hours_label, LV_TEXT_ALIGN_CENTER, 0);
-    char hours_str[4];
-    snprintf(hours_str, sizeof(hours_str), "%02d", hours);
-    lv_label_set_text(hours_label, hours_str);
+    hours_label = lv_label_create(scr);
     lv_obj_set_style_text_font(hours_label, &pixeboy_60, 0);
     lv_obj_set_style_text_color(hours_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(hours_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(hours_label, LV_OPA_COVER, 0);
     lv_obj_align(hours_label, LV_ALIGN_TOP_LEFT, 1, 10);
-
-    /* Minutes label */
-    lv_obj_t *minutes_label = lv_label_create(scr);
-    lv_obj_set_width(minutes_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(minutes_label, LV_TEXT_ALIGN_CENTER, 0);
-    char minutes_str[4];
-    snprintf(minutes_str, sizeof(minutes_str), "%02d", minutes);
-    lv_label_set_text(minutes_label, minutes_str);
+    
+    minutes_label = lv_label_create(scr);
     lv_obj_set_style_text_font(minutes_label, &pixeboy_60, 0);
     lv_obj_set_style_text_color(minutes_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(minutes_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(minutes_label, LV_OPA_COVER, 0);
     lv_obj_align(minutes_label, LV_ALIGN_TOP_LEFT, 1, 48);
     
-    /* AM/PM label */
-    lv_obj_t *ampm_label = lv_label_create(scr);
-    lv_obj_set_width(ampm_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(ampm_label, LV_TEXT_ALIGN_CENTER, 0);
-    char ampm_str[4];
-    snprintf(ampm_str, sizeof(ampm_str), "%s", (hours < 12) ? "AM" : "PM");
-    lv_label_set_text(ampm_label, ampm_str);
+    ampm_label = lv_label_create(scr);
     lv_obj_set_style_text_font(ampm_label, &pixeboy_60, 0);
     lv_obj_set_style_text_color(ampm_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(ampm_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(ampm_label, LV_OPA_COVER, 0);
     lv_obj_align(ampm_label, LV_ALIGN_TOP_LEFT, 1, 86);
-
-    /* mid line */
-    lv_obj_t *mid_line = lv_obj_create(scr);
+    
+    mid_line = lv_obj_create(scr);
     lv_obj_set_size(mid_line, 2, 117);
     lv_obj_set_style_bg_color(mid_line, lv_color_hex(0xffffff), 0);
     lv_obj_set_style_bg_opa(mid_line, LV_OPA_COVER, 0);              // Ensure full opacity
@@ -310,60 +275,79 @@ void draw_time(uint8_t hours, uint8_t minutes, uint8_t seconds){
     lv_obj_set_style_outline_opa(mid_line, LV_OPA_TRANSP, 0); // No outline
 }
 
-void draw_date(const char* month, const char* day, const char* year, const char* day_of_week){
-    lv_obj_t *scr = lv_scr_act();
+void update_time_display(uint8_t hours, uint8_t minutes, uint8_t seconds) {
+    uint8_t sec_box_h = seconds * 117 / 60;
+    lv_obj_set_size(sec_box, 63, sec_box_h);
+    
+    char hours_str[4];
+    snprintf(hours_str, sizeof(hours_str), "%02d", hours == 0 ? 12 : hours > 12 ? hours - 12 : hours);
+    lv_label_set_text(hours_label, hours_str);
+    
+    char minutes_str[4];
+    snprintf(minutes_str, sizeof(minutes_str), "%02d", minutes);
+    lv_label_set_text(minutes_label, minutes_str);
+    
+    char ampm_str[4];
+    snprintf(ampm_str, sizeof(ampm_str), "%s", (hours < 12) ? "AM" : "PM");
+    lv_label_set_text(ampm_label, ampm_str);
+}
 
-    /* DoW label */
-    lv_obj_t *dow_label = lv_label_create(scr);
-    lv_obj_set_width(dow_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(dow_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(dow_label, day_of_week);
+void init_date_display(lv_obj_t *scr) {
+    dow_label = lv_label_create(scr);
     lv_obj_set_style_text_font(dow_label, &pixeboy_32, 0);
     lv_obj_set_style_text_color(dow_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(dow_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(dow_label, LV_OPA_COVER, 0);
+    lv_obj_set_width(dow_label, DISPLAY_WIDTH/2);
+    lv_obj_set_style_text_align(dow_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(dow_label, LV_ALIGN_TOP_RIGHT, 0, 10);
-
-    /* Month label */
-    lv_obj_t *month_label = lv_label_create(scr);
-    lv_obj_set_width(month_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(month_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(month_label, month);
+    
+    month_label = lv_label_create(scr);
     lv_obj_set_style_text_font(month_label, &pixeboy_32, 0);
     lv_obj_set_style_text_color(month_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(month_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(month_label, LV_OPA_COVER, 0);
+    lv_obj_set_width(month_label, DISPLAY_WIDTH/2);
+    lv_obj_set_style_text_align(month_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(month_label, LV_ALIGN_TOP_RIGHT, 0, 35);
-
-    /* Day label */
-    lv_obj_t *day_label = lv_label_create(scr);
-    lv_obj_set_width(day_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(day_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(day_label, day);
+    
+    day_label = lv_label_create(scr);
     lv_obj_set_style_text_font(day_label, &pixeboy_60, 0);
     lv_obj_set_style_text_color(day_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(day_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(day_label, LV_OPA_COVER, 0);
-    lv_obj_align(day_label, LV_ALIGN_TOP_RIGHT, 1, 60);
-
-    /* Year label */
-    lv_obj_t *year_label = lv_label_create(scr);
-    lv_obj_set_width(year_label, DISPLAY_WIDTH/2);
-    lv_obj_set_style_text_align(year_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(year_label, year);
+    lv_obj_set_width(day_label, DISPLAY_WIDTH/2);
+    lv_obj_set_style_text_align(day_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(day_label, LV_ALIGN_TOP_RIGHT, 0, 60);
+    
+    year_label = lv_label_create(scr);
     lv_obj_set_style_text_font(year_label, &pixeboy_20, 0);
     lv_obj_set_style_text_color(year_label, lv_color_hex(0xffffff), 0);
-    lv_obj_set_style_bg_color(year_label, lv_color_black(), 0);
-    lv_obj_set_style_text_opa(year_label, LV_OPA_COVER, 0);
+    lv_obj_set_width(year_label, DISPLAY_WIDTH/2);
+    lv_obj_set_style_text_align(year_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(year_label, LV_ALIGN_TOP_RIGHT, 0, 103);
+}
 
+void update_date_display(const char* month, const char* day, const char* year, const char* day_of_week) {
+    lv_label_set_text(dow_label, day_of_week);
+    lv_label_set_text(month_label, month);
+    lv_label_set_text(day_label, day);
+    lv_label_set_text(year_label, year);
+}
+
+void init_all_display(){
+    display_handler_init();
+    lvgl_port_lock(0);
+    lv_obj_t *scr = lv_scr_act();
+    init_status_bar(scr);
+    init_date_display(scr);
+    init_time_display(scr);
+    lvgl_port_unlock();
 }
 
 void demo(){
     /* Show LVGL objects */
     lvgl_port_lock(0);
-    draw_status_bar(true, true, "12:34:56PM", 75);
-    draw_time(12, 34, 56);
-    draw_date("Feb", "11", "2025", "Tue");
+    lv_obj_t *scr = lv_scr_act();
+    init_status_bar(scr);
+    init_date_display(scr);
+    init_time_display(scr);
+    update_status_bar("12:34:56PM", 75);
+    update_time_display(12, 34, 56);
+    update_date_display("Feb", "11", "2025", "Tue");
     lvgl_port_unlock();
 }

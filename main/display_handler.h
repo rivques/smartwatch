@@ -1,5 +1,6 @@
 #pragma once
 #include "esp_err.h"
+#include "lvgl.h"
 
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 128
@@ -21,3 +22,10 @@
 
 esp_err_t display_handler_init(void);
 void demo();
+void init_time_display(lv_obj_t *scr);
+void update_time_display(uint8_t hours, uint8_t minutes, uint8_t seconds);
+void init_date_display(lv_obj_t *scr);
+void update_date_display(const char* month, const char* day, const char* year, const char* day_of_week);
+void init_status_bar(lv_obj_t *scr);
+void update_status_bar(const char* time_string, int8_t batt_pct);
+void init_all_display();

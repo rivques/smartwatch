@@ -20,7 +20,10 @@
         "pixeboy_20.h": "c",
         "esp_lvgl_port.h": "c",
         "esp_lcd_panel_ops.h": "c",
-        "pixeboy_16.h": "c"
+        "pixeboy_16.h": "c",
+        "time.h": "c",
+        "nvs_flash.h": "c",
+        "string.h": "c"
     },
     "idf.flashType": "UART"
 }
