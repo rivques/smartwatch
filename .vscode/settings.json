@@ -1,0 +1,26 @@
+{
+    "C_Cpp.intelliSenseEngine": "default",
+    "idf.espIdfPathWin": "C:\\Users\\lewis\\esp\\v5.4\\esp-idf",
+    "idf.openOcdConfigs": [
+        "\\"
+    ],
+    "idf.portWin": "COM6",
+    "idf.toolsPathWin": "C:\\Users\\lewis\\.espressif",
+    "files.associations": {
+        "display_handler.h": "c",
+        "esp_log.h": "c",
+        "esp_lcd_panel_vendor.h": "c",
+        "esp_err.h": "c",
+        "esp_check.h": "c",
+        "lvgl.h": "c",
+        "lv_font.h": "c",
+        "lcd_7x5.h": "c",
+        "cstdlib": "c",
+        "pixeboy_32.h": "c",
+        "pixeboy_20.h": "c",
+        "esp_lvgl_port.h": "c",
+        "esp_lcd_panel_ops.h": "c",
+        "pixeboy_16.h": "c"
+    },
+    "idf.flashType": "UART"
+}

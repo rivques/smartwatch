@@ -1,0 +1,23 @@
+#pragma once
+#include "esp_err.h"
+
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 128
+#define DISPLAY_OFFSET_W 2
+#define DISPLAY_OFFSET_H 1
+
+#define LCD_HOST       SPI2_HOST
+#define LCD_PIXEL_CLOCK_HZ (20 * 1000 * 1000)
+#define LCD_BK_LIGHT_ON_LEVEL  1
+#define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
+#define PIN_NUM_DATA0          23  /*!< for 1-line SPI, this also refereed as MOSI */
+#define PIN_NUM_PCLK           19
+#define PIN_NUM_CS             22
+#define PIN_NUM_DC             21
+#define PIN_NUM_RST            18
+#define PIN_NUM_BK_LIGHT       5
+#define LCD_CMD_BITS           8
+#define LCD_PARAM_BITS         8
+
+esp_err_t display_handler_init(void);
+void demo();
